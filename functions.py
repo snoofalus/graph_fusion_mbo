@@ -32,7 +32,7 @@ def maskToVector(mask):
 		mapping.update({key:value})
 
 	if np.array_equal(unique, range_array):
-		print('Mapping  not needed')
+		#print('Mapping  not needed')
 		return old_mask_vector, mapping
 
 
@@ -203,10 +203,10 @@ def nystrom(W, XX_idx, YY_idx, args, flip=False):
 	https://www.researchgate.net/publication/301941366_Diffuse_Interface_Models_on_Graphs_for_Classification_of_High_Dimensional_Data
 
 	Approximates graph laplacian eigenvectors from 
-	the weighted graph W with L landmark nodes of fused multimodal input X_1, ..., X_k.
+	the weighted graph W(NxN) with L landmark nodes of fused multimodal input X_1, ..., X_k.
 
 	This is done by projecting the majority of calculations 
-	lying in W_YY from landmark nodes s.t. with L = 100 the largest marix calculations are
+	lying in W_YY from landmark nodes s.t. with L landmark nodes the largest marix calculations are
 	at most L by N and not N by N.
 
 	L is either drawn at random, found by k-means or specifically chosen 
@@ -251,7 +251,7 @@ def nystrom(W, XX_idx, YY_idx, args, flip=False):
 			W_XY[i, j] = W[XY_perm[c][0], XY_perm[c][1]]
 			c = c + 1
 
-	#if needed add small ridge to W_XX here for numerical stability
+	#if needed can add small ridge to W_XX here for numerical stability
 
 	#unit vectors
 	v_x = np.ones((L, 1))
@@ -344,7 +344,6 @@ def nystrom(W, XX_idx, YY_idx, args, flip=False):
 	#print(tilde_eig[1])
 	#print(tilde_eig[-2])
 	#print(tilde_eig[-1])
-
 	#exit()
 
 	if flip == True:
@@ -356,7 +355,7 @@ def nystrom(W, XX_idx, YY_idx, args, flip=False):
 
 
 	if (tilde_eig[0] < 0) and (abs(tilde_eig[0]) < args.error_margin):
-		print("Negative eigval [{}] in Nystrom within margin of error.".format(tilde_eig[0]))
+		#print("Negative eigval [{}] in Nystrom within margin of error.".format(tilde_eig[0]))
 		tilde_eig[0] = 0
 
 	elif (tilde_eig[0] < 0) and (abs(tilde_eig[0]) > args.error_margin):
@@ -482,7 +481,7 @@ def graphMBO(tilde_eig, H, u_hat, Chi, args):
 	I = H.shape[0]
 	K = H.shape[1]
 
-	print("==> Running Graph MBO on {} nodes with {} classes\nsemisup: [{}] mu: [{}] dt: [{}] s: [{}]".format(I, M, args.semi_percent, args.mu, args.delta_t, args.n_diffusions))
+	#print("==> Running Graph MBO on {} nodes with {} classes\nsemisup: [{}] mu: [{}] dt: [{}] s: [{}]".format(I, M, args.semi_percent, args.mu, args.delta_t, args.n_diffusions))
 
 	u = np.zeros((u_hat.shape))
 	current_labels = np.zeros((I,))
@@ -518,8 +517,8 @@ def graphMBO(tilde_eig, H, u_hat, Chi, args):
 
 	for iteration in range(args.iterations):
 
-		if iteration % 10 == 0:
-			print("\nEpoch: [{}|{}]".format(iteration, args.iterations))
+		#if iteration % 10 == 0:
+			#print("\nEpoch: [{}|{}]".format(iteration, args.iterations))
 
 		# a = H^T*u
 		a = np.matmul(H.T, u)
@@ -536,9 +535,9 @@ def graphMBO(tilde_eig, H, u_hat, Chi, args):
 			#u^{n+1/2} = H*a
 			u = np.matmul(H, a)
 
-			#d^n = H^T Chi(x)(u^n-u_hat)
 			#tmp = (u-u_hat)*Chi[:, None]
 			tmp = ((u-u_hat).T*Chi).T
+			#d^n = H^T Chi(x)(u^n-u_hat)
 			d = np.matmul(H.T, tmp)
 		
 
@@ -547,9 +546,8 @@ def graphMBO(tilde_eig, H, u_hat, Chi, args):
 
 		#stop and return u if difference between iterations < puritymeasure
 		if percent_equal > 0.9999:
-			print("Graph MBO converged at iter: {}".format(iteration))
+			#print("Graph MBO converged at iter: {}".format(iteration))
 			break
-		#print(np.unique(current_labels))
 
 	return current_labels 
 
@@ -617,7 +615,23 @@ def mapBack(new_mask_vector, mapping):
 
 	return old_mask_vector
 
-def calculateIntersectionOverUnion(mask_vector, classification_vector):
+def pixelAccuracy(mask_hat, mask):
+	'''
+	Calculates pixel accuracy 
+
+	Args: 
+		logits: (N, classes, H, W)
+		masks: (N, H, W)
+	'''
+
+	correct_pixels = np.sum(np.equal(mask_hat, mask))
+	total_pixels = np.prod(mask.shape)
+
+	accuracy = correct_pixels / total_pixels
+
+	return accuracy
+
+def intersectionOverUnion(mask_hat, mask, num_classes):
 	'''
 	Takes in vector of groundtruth and vector of predicted classes and uses
 	those to calculate Intersection over Union and mean IOU.
@@ -641,24 +655,63 @@ def calculateIntersectionOverUnion(mask_vector, classification_vector):
 		mean_iou: number describing overall prediction performance
 	'''
 
-	class_iou = []
-
-	#number of classes
-	unique = np.unique(old_mask_vector)
-	n_unique = len(unique)
+	class_iou = []#np.empty((num_classes, ))
 
 	#start from 1 to ignore background = 0
-	for cl in range(1, n_unique):
-	    true_positive = np.sum(np.logical_and(classification_vector == cl, mask_vector == cl))
-	    false_positive = np.sum(np.logical_and(classification_vector != cl, mask_vector == cl))
-	    false_negative = np.sum(np.logical_and(classification_vector == cl, mask_vector != cl))
-	        
-	    if (true_positive == 0) & (false_positive == 0) & (false_negative == 0): # possibly iou_class = 1
-	      tmp_class_iou = 0
-	    else:
-	      tmp_class_iou = true_positive/(true_positive + false_positive + false_negative)
-	    class_iou.append(tmp_class_iou)
-    
-	mean_iou = np.sum(class_iou) / (n_unique - 1)
+	for cl in range(num_classes):
+
+		true_positive = np.sum(np.logical_and(mask_hat == cl, mask == cl))
+		false_positive = np.sum(np.logical_and(mask_hat != cl, mask == cl))
+		false_negative = np.sum(np.logical_and(mask_hat == cl, mask != cl))
+		ground_truth = true_positive + false_positive + false_negative
+
+		if ground_truth != 0:
+			class_iou.append(true_positive / ground_truth)
+
+		else:
+			class_iou.append('nan')
+
+		#if (true_positive == 0) & (false_positive == 0) & (false_negative == 0): # possibly iou_class = 1
+		#  tmp_class_iou = 0
+
+	mean_iou = 0.0
+	#mean_iou = np.sum(class_iou) / (n_unique - 1)
 
 	return class_iou, mean_iou
+
+class TextLog(object):
+	def __init__(self, log_path):
+		#remember to use .close method after initializing object
+		self.file = open(log_path, 'w')
+
+	def headers(self, headers):
+		#creates headliners for log file
+		#self.metrics = {}
+
+		for head in headers:
+			self.file.write(head)
+			self.file.write('\t')
+			#self.metrics[head] = []
+		self.file.write('\n')
+		self.file.flush()
+
+	def update(self, metrics, class_iou):
+		#save (epoch, total_epochs, accuracy, mean_iou) and class ious on alternating lines.
+		for metric in metrics:
+			self.file.write('{}'.format(metric))
+			self.file.write('\t')
+		self.file.write('\n')
+
+		for class_idx, iou in enumerate(class_iou):
+			if iou == 'nan':
+				self.file.write('{}: nan'.format(class_idx))
+			else:
+				self.file.write('{}: {:.3f}'.format(class_idx, iou))
+			self.file.write('\t')
+
+		self.file.write('\n')
+
+		self.file.flush()
+
+	def close(self):
+		self.file.close()
