@@ -16,9 +16,9 @@ Its goal is semantic segmentation of multimodal images by:
 
 ## Usage
 To use with a different dataset the model expects:
-A folder of multimodal numpy images @ ../data-local/images/*dataset*/data
-Numpy masks with the same name as their corresponding image @ ../data-local/images/*my_dataset*/mask
-Create a new dataset loader file using the custom pytorch loaders @ /dataset/*my_dataset*.py
+A folder of multimodal numpy images @ ../data-local/images/*dataset*/data  
+Numpy masks with the same name as their corresponding image @ ../data-local/images/*my_dataset*/mask  
+Create a new dataset loader file using the custom pytorch loaders @ /dataset/*my_dataset*.py  
 
 The model can then be run with default arguments as
 ```python
