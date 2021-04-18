@@ -1,5 +1,6 @@
 results/
+dataset/__pycache__
 
-__pychache__
+__pycache__
 
 *.pyc
