@@ -1,5 +1,5 @@
 # Graph Fusion MBO
-The code of this repository is an unofficial extension of [A Graph-Based Approach for Data Fusion and Segmentation of Multimodal Images](https://ieeexplore.ieee.org/document/9206144).
+The code of this repository is an unofficial python extension of [A Graph-Based Approach for Data Fusion and Segmentation of Multimodal Images](https://ieeexplore.ieee.org/document/9206144).
 
 Its goal is semantic segmentation of multimodal images by:
 1. Constructing weighted graphs for each input modality
