@@ -1,13 +1,11 @@
-#builtin
-import argparse
+#standard library
 import os
-from itertools import combinations
+import time
+import argparse
 
 #misc
 import numpy as np
 import matplotlib.pyplot as plt
-import time
-from tqdm import tqdm
 
 #torch
 import torch
@@ -28,19 +26,19 @@ parser.add_argument('--iterations', default=500, type=int, metavar='N',
                     help='max possible number of iterations if MBO not converging')
 
 parser.add_argument('--stopping-criteria', default=0.9999, type=float,
-					help='percentage of change between iterations to stop above')
+					help='percentage limit of change between iterations to stop MBO')
 
 parser.add_argument('--error-margin', default=10**(-14), type=float, 
 					help='margin of error for lowest eigenval in nystrom')
 
 parser.add_argument('--eigen_method', default='nystrom',
-					help='Approximate eigenvectors with Nystrom or calculate True Laplacian [nystrom], [laplacian].')
+					help='Approximate eigenvectors with Nystrom or calculate True Laplacian: [nystrom], [laplacian].')
 
 parser.add_argument('--nystrom_drawing_method', default='first',
 					help='Method for drawing Nystrom landmark nodes: [first], [random], [handpick].')
 
 parser.add_argument('--classifier', default='mbo',
-					help='Classification method, i.e. graph mbo or spectral clustering [spectral], [mbo].')
+					help='Classification method, i.e. graph mbo or spectral clustering: [spectral], [mbo].')
 
 parser.add_argument('--mbo_drawing_method', default='handpick',
 					help='Method for drawing semi-supervised input nodes: [random], [handpick].')
@@ -358,7 +356,6 @@ def classify(mode1, mode2, mask, args):
 
 	else:
 		print('ERROR No valid classifier, choose from [spectral], [mbo]')
-
 
 
 main()
