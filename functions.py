@@ -657,25 +657,21 @@ def intersectionOverUnion(mask_hat, mask, num_classes):
 
 	class_iou = []#np.empty((num_classes, ))
 
-	#start from 1 to ignore background = 0
+	#can start from 1 to ignore background = 0
 	for cl in range(num_classes):
 
 		true_positive = np.sum(np.logical_and(mask_hat == cl, mask == cl))
 		false_positive = np.sum(np.logical_and(mask_hat != cl, mask == cl))
 		false_negative = np.sum(np.logical_and(mask_hat == cl, mask != cl))
-		ground_truth = true_positive + false_positive + false_negative
+		union = true_positive + false_positive + false_negative
 
-		if ground_truth != 0:
-			class_iou.append(true_positive / ground_truth)
+		if union != 0:
+			class_iou.append(true_positive / union)
 
 		else:
-			class_iou.append('nan')
+			class_iou.append(np.nan)
 
-		#if (true_positive == 0) & (false_positive == 0) & (false_negative == 0): # possibly iou_class = 1
-		#  tmp_class_iou = 0
-
-	mean_iou = 0.0
-	#mean_iou = np.sum(class_iou) / (n_unique - 1)
+	mean_iou = np.nanmean(class_iou)
 
 	return class_iou, mean_iou
 
